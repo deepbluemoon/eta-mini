@@ -1,4 +1,5 @@
 import importlib
+import tomllib
 
 import pytest
 from fastapi.testclient import TestClient
@@ -226,3 +227,40 @@ def test_unknown_model_impl_fails_at_import(monkeypatch):
     finally:
         monkeypatch.undo()
         importlib.reload(app_module)
+
+
+def test_index_returns_html():
+    """/ 가 200 과 text/html 응답을 돌려주는지 확인한다."""
+    res = client.get("/")
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("text/html")
+    assert res.text.lstrip().lower().startswith("<!doctype html>")
+
+
+def test_index_shows_version_and_model():
+    """/ 페이지에 pyproject.toml 의 버전과 현재 구현체 이름이 보이는지 확인한다."""
+    with open("pyproject.toml", "rb") as f:
+        version = tomllib.load(f)["project"]["version"]
+    res = client.get("/")
+    assert f">v{version}<" in res.text
+    assert ">model: rule<" in res.text
+    assert "$" not in res.text.split("<main>")[1]  # 치환되지 않은 $placeholder 가 없어야 한다
+
+
+def test_index_lists_endpoints_and_docs():
+    """/ 페이지가 /health, /eta 엔드포인트와 /docs 링크를 안내하는지 확인한다."""
+    res = client.get("/")
+    for path in ("<code>/health</code>", "<code>/eta</code>", 'href="/docs"'):
+        assert path in res.text
+
+
+def test_openapi_version_matches_project():
+    """OpenAPI 스키마의 info.version 이 pyproject.toml 버전과 같은지 확인한다."""
+    with open("pyproject.toml", "rb") as f:
+        version = tomllib.load(f)["project"]["version"]
+    assert client.get("/openapi.json").json()["info"]["version"] == version
+
+
+def test_index_rejects_post():
+    """/ 에 POST 하면 405 를 돌려주는지 확인한다."""
+    assert client.post("/").status_code == 405
