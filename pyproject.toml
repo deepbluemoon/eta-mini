@@ -12,3 +12,8 @@ dev = [
     "httpx2>=2.16.0",
     "pytest>=9.2.0",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."] # 이 경로로 부터 테스트를 해라. 
+testpaths = ["api/tests"]
+addopts = "-ra"
