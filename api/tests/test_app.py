@@ -211,7 +211,9 @@ def test_eta_infinite_distance_returns_422():
 )
 def test_eta_overflowing_distance_never_returns_null_minutes():
     """계산이 overflow 되는 큰 거리는 422 이거나, 200 이면 minutes 가 숫자인지 확인한다."""
-    res = lenient_client.request("GET", "/eta", json={"distance_km": 1e308, "pending_orders": 0})
+    res = lenient_client.request(
+        "GET", "/eta", json={"distance_km": 1e308, "pending_orders": 0}
+    )
     if res.status_code != 422:
         assert res.status_code == 200
         assert isinstance(res.json()["minutes"], float)

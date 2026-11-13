@@ -17,7 +17,9 @@ from api.predictors.rule import estimate_delivery_minutes
 )
 def test_known_inputs(distance_km, pending_orders, expected):
     """알려진 입력에 대해 10 + 3*거리 + 2*주문수 를 돌려주는지 확인한다."""
-    assert estimate_delivery_minutes(distance_km, pending_orders) == pytest.approx(expected)
+    assert estimate_delivery_minutes(distance_km, pending_orders) == pytest.approx(
+        expected
+    )
 
 
 def test_returns_float():
