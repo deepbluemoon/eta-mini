@@ -11,9 +11,19 @@ dependencies = [
 dev = [
     "httpx2>=2.16.0",
     "pytest>=9.2.0",
+    "ruff>=0.17.4",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = ["."] # 이 경로로 부터 테스트를 해라. 
 testpaths = ["api/tests"]
 addopts = "-ra"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+extend-exclude = [".claude"] # Claude Code 워크트리는 포맷 대상에서 제외
+
+[tool.ruff.lint]
+select = ["E", "F", "I"] # pycodestyle, pyflakes, import 정렬
+ignore = ["E501"] # 줄 길이는 formatter 가 맡는다 (한글 docstring 은 자를 수 없음)
