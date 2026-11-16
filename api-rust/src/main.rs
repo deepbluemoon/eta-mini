@@ -357,7 +357,10 @@ mod tests {
         };
         let model = concat!(env!("CARGO_MANIFEST_DIR"), "/../artifacts/model_sklearn.onnx");
         let predict = new_onnx_predictor(&lib, model).unwrap();
-        assert_eq!(predict(3.0, 2.0).unwrap(), 28.940723419189453);
-        assert_eq!(predict(0.0, 0.0).unwrap(), 12.031005859375);
+        // CI 는 모델을 다시 학습하고 CPU 도 달라 f32 끝자리가 흔들린다. check_parity 와 같은 허용 오차로 비교한다
+        for ((d, p), want) in [((3.0, 2.0), 28.940723419189453), ((0.0, 0.0), 12.031005859375)] {
+            let got = predict(d, p).unwrap();
+            assert!((got - want).abs() < 1e-4, "predict({d}, {p}) = {got}, want {want}");
+        }
     }
 }
