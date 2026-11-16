@@ -1,9 +1,12 @@
 import importlib
+import math
 import os
 from string import Template
 
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 APP_VERSION = "0.2.0"  # pyproject.toml 의 version 과 맞춘다
@@ -18,7 +21,10 @@ class EtaRequest(BaseModel):
 
     # 모델이 더 많은 정보를 원하면 여기에 필드를 추가
     # 아래 ge=09 와 같은 조건들을 유효성 검사 룰을 지정 (validation rule)
-    distance_km: float = Field(ge=0, description="가게에서 배달지까지 거리(km)")
+    # NaN·inf 를 막고, 계산이 overflow 되지 않도록 현실적인 상한을 둔다
+    distance_km: float = Field(
+        ge=0, le=1000, allow_inf_nan=False, description="가게에서 배달지까지 거리(km)"
+    )
     pending_orders: int = Field(ge=0, description="지금 밀려 있는 주문 수")
 
 
@@ -30,6 +36,27 @@ class EtaResponse(BaseModel):
 
 
 app = FastAPI(title="delivery-eta", version=APP_VERSION)
+
+
+def _json_safe(value):
+    """NaN·inf 처럼 JSON 으로 못 만드는 float 를 문자열로 바꾼다."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return str(value)
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(v) for v in value]
+    return value
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
+    """422 본문에 잘못된 입력(NaN 등)이 그대로 담겨 500 이 나는 것을 막는다."""
+    detail = _json_safe(jsonable_encoder(exc.errors()))
+    return JSONResponse(status_code=422, content={"detail": detail})
+
 
 # CSS 의 { } 와 섞이지 않도록 f-string 대신 $name 치환을 쓴다
 INDEX_HTML = Template("""<!doctype html>

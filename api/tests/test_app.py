@@ -174,7 +174,7 @@ def test_eta_huge_int_orders_current_behavior():
     assert res.json()["minutes"] == pytest.approx(2e30)
 
 
-# --- 알려진 결함: 앱이 고쳐지면 XPASS 로 실패하므로 마커를 지운다 ---
+# --- 비정상 float 입력(NaN, Infinity, overflow) ---
 
 lenient_client = TestClient(app, raise_server_exceptions=False)
 
@@ -186,30 +186,18 @@ def send_raw_eta(content):
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="결함: NaN 은 검증에서 걸리지만 422 본문을 JSON 으로 만들다 ValueError 로 500 이 난다",
-)
 def test_eta_nan_distance_returns_422():
     """distance_km 가 NaN 이면 500 이 아니라 422 를 돌려주는지 확인한다."""
     res = send_raw_eta('{"distance_km": NaN, "pending_orders": 0}')
     assert res.status_code == 422
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="결함: Infinity 가 ge=0 검증을 통과해 200 과 minutes=null 을 돌려준다",
-)
 def test_eta_infinite_distance_returns_422():
     """distance_km 가 Infinity 이면 422 를 돌려주는지 확인한다."""
     res = send_raw_eta('{"distance_km": Infinity, "pending_orders": 0}')
     assert res.status_code == 422
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="결함: 3*1e308 이 inf 로 overflow 되어 200 과 minutes=null 을 돌려준다",
-)
 def test_eta_overflowing_distance_never_returns_null_minutes():
     """계산이 overflow 되는 큰 거리는 422 이거나, 200 이면 minutes 가 숫자인지 확인한다."""
     res = lenient_client.request(
@@ -246,7 +234,9 @@ def test_index_shows_version_and_model():
     res = client.get("/")
     assert f">v{version}<" in res.text
     assert ">model: rule<" in res.text
-    assert "$" not in res.text.split("<main>")[1]  # 치환되지 않은 $placeholder 가 없어야 한다
+    assert (
+        "$" not in res.text.split("<main>")[1]
+    )  # 치환되지 않은 $placeholder 가 없어야 한다
 
 
 def test_index_lists_endpoints_and_docs():
