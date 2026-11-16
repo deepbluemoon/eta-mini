@@ -4,10 +4,8 @@ version = "0.2.0"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.162.4",
-    "joblib>=1.6.0",
     "numpy>=2.4.6",
     "onnxruntime>=1.32.0",
-    "scikit-learn>=1.9.1",
     "uvicorn>=0.54.0",
 ]
 
@@ -18,8 +16,10 @@ dev = [
     "ruff>=0.17.4",
 ]
 train = [
+    "joblib>=1.6.0",
     "onnx>=1.23.2",
     "onnxscript>=0.7.2",
+    "scikit-learn>=1.9.1",
     "skl2onnx>=1.20.0",
     "torch>=2.15.0",
 ]
