@@ -109,15 +109,16 @@ jobs:
             ${{ env.IMAGE }}/eta-rust:${{ github.ref_name }}
             ${{ env.IMAGE }}/eta-rust:latest
 
-      - uses: docker/build-push-action@v7
+      - name: Python API (rule 구현체. onnx 이미지를 덮어쓰지 않도록 -rule 태그로 따로 올린다)
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: api/Dockerfile
           push: true
           build-args: MODEL_IMPL=rule
           tags: |
-            ${{ env.IMAGE }}/eta-api:${{ github.ref_name }}
-            ${{ env.IMAGE }}/eta-api:latest
+            ${{ env.IMAGE }}/eta-api:${{ github.ref_name }}-rule
+            ${{ env.IMAGE }}/eta-api:rule
 
   deploy: # ── 서버 배포: Render 에 새 이미지로 다시 배포하라고 요청 ──
     needs: image
