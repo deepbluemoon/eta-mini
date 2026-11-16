@@ -16,6 +16,9 @@ dev = [
     "pytest>=9.2.0",
     "ruff>=0.17.4",
 ]
+train = [
+    "torch>=2.15.0",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["."] # 이 경로로 부터 테스트를 해라. 
@@ -30,3 +33,13 @@ extend-exclude = [".claude"] # Claude Code 워크트리는 포맷 대상에서 �
 [tool.ruff.lint]
 select = ["E", "F", "I"] # pycodestyle, pyflakes, import 정렬
 ignore = ["E501"] # 줄 길이는 formatter 가 맡는다 (한글 docstring 은 자를 수 없음)
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+# 이 줄이 없다면, uv가 다른 모든 패키지까지 이 저장소에서 **먼저** 찾다가 의존성 해석에 실패한다.
+# 이 줄이 있으면 `torch`만 이 저장소를 쓴다.
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
