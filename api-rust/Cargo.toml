@@ -1,0 +1,22 @@
+[package]
+name = "api-rust"
+version = "0.2.0" # pyproject.toml 의 version 과 맞춘다
+edition = "2024"
+publish = false
+
+[dependencies]
+axum = "0.8.9"
+mime = "0.3"
+# load-dynamic: ORT_LIB 의 ONNX Runtime 공유 라이브러리를 실행 시 읽는다 (런타임을 내려받지 않는다)
+ort = { version = "=2.0.0-rc.15", default-features = false, features = ["std", "load-dynamic"] }
+serde = { version = "1", features = ["derive"] }
+# arbitrary_precision: 1e400 같은 숫자도 JSON 오류가 아닌 범위 오류(422 finite_number)로 다룬다
+serde_json = { version = "1", features = ["arbitrary_precision"] }
+tokio = { version = "1.54", features = ["macros", "rt-multi-thread", "net", "signal"] }
+
+[dev-dependencies]
+http-body-util = "0.1"
+tower = { version = "0.5", features = ["util"] }
+
+[profile.release]
+strip = true
